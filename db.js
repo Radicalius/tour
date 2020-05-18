@@ -1,4 +1,15 @@
 const { Pool } = require('pg')
+const crypto = require('crypto');
+
+function guid(){
+  return Math.floor(Math.random() * (2**32 - 1))
+}
+
+function secureHash(string){
+  var sha256 = crypto.createHash('sha256')
+  sha256.update(string)
+  return sha256.digest("hex")
+}
 
 function initDb() {
     var uri = process.env.DATABASE_URL.replace('postgres://','')
@@ -46,4 +57,17 @@ function initDb() {
     return pool
 }
 
-module.exports = {initDb: initDb}
+function insertTrail(pool, trail) {
+  trail.guid = guid()
+  trail.pass = secureHash(trail.pass)
+  pool.query(`INSERT INTO trails VALUES ($1,$2,$3,$4,$5,$6)`, [
+    trail.guid,
+    trail.name,
+    trail.description,
+    trail.geohash,
+    trail.image,
+    trail.pass
+  ], (err, result) => { console.log(err) })
+}
+
+module.exports = {initDb: initDb, insertTrail: insertTrail}
