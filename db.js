@@ -70,4 +70,39 @@ function insertTrail(pool, trail) {
   ], (err, result) => { console.log(err) })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail}
+function getTrails(pool, constr, rules, callback) {
+  var where = []
+  var vals = []
+  var i = 1;
+  for (con in constr) {
+    if (rules[con] === "exact") {
+      where.push(`${con} = $${i}`)
+      vals.push(constr[con])
+    }
+    if (rules[con] === "prefix") {
+      where.push(`${con} LIKE $${i}`)
+      vals.push(constr[con]+'%')
+    }
+    if (rules[con] === "substr") {
+      where.push(`${con} LIKE $${i}`)
+      vals.push('%'+constr[con]+'%')
+    }
+    i ++
+  }
+  console.log(vals)
+  var where_str = "";
+  if (where.length > 0) {
+    where_str = "WHERE "+where.join(" AND ")
+  }
+  console.log(`SELECT * FROM trails ${ where_str }`)
+  pool.query(`SELECT * FROM trails ${ where_str }`, vals, (err, rows) => {
+    console.log(err)
+    rows = rows.rows
+    for (row in rows) {
+      delete rows[row].pass
+    }
+    callback(rows)
+  })
+}
+
+module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails}

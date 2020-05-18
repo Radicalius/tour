@@ -17,9 +17,24 @@ function assertForm (body, res, form) {
       return false
     }
     if (typeof(body[elem]) !== "undefined" && typeof(body[elem]) !== form[elem].type) {
+      if (form[elem].type === "number") {
+        body[elem] = parseInt(body[elem])
+        if (body[elem] !== NaN) {
+          continue
+        }
+      }
       res.status(400)
       res.send(JSON.stringify({
         error: "Invalid type for Parameter "+elem+": Expected "+form[elem].type+" but got "+typeof(body[elem])
+      }))
+      return false
+    }
+  }
+  for (elem in body) {
+    if (typeof(form[elem]) === "undefined") {
+      res.status(400)
+      res.send(JSON.stringify({
+        error: "Extraneous Parameter "+elem
       }))
       return false
     }
@@ -28,7 +43,6 @@ function assertForm (body, res, form) {
 }
 
 app.post('/trails', function (req, res) {
-  console.log(req.body)
   var valid = assertForm(req.body, res, {
     name: {type: "string", required: true},
     geohash: {type: "string", required: true},
@@ -39,6 +53,23 @@ app.post('/trails', function (req, res) {
   if (valid) {
     db.insertTrail(pool, req.body)
     res.send('')
+  }
+});
+
+app.get('/trails', function (req, res) {
+  var valid = assertForm(req.query, res, {
+    guid: {type: "number", required: false},
+    name: {type: "string", required: false},
+    geohash: {type: "string", required: false}
+  })
+  if (valid) {
+    db.getTrails(pool, req.query, {
+      guid: "exact",
+      name: "substr",
+      geohash: "prefix"
+    }, (rows) => {
+      res.send(JSON.stringify(rows))
+    })
   }
 });
 
