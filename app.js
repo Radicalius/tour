@@ -45,6 +45,7 @@ function assertForm (body, res, form) {
 app.post('/trails', function (req, res) {
   var valid = assertForm(req.body, res, {
     name: {type: "string", required: true},
+    author: {type: "string", required: true},
     geohash: {type: "string", required: true},
     image: {type: "string", required: true},
     description: {type: "string", required: true},
@@ -60,13 +61,15 @@ app.get('/trails', function (req, res) {
   var valid = assertForm(req.query, res, {
     guid: {type: "number", required: false},
     name: {type: "string", required: false},
+    author: {type: "string", required: false},
     geohash: {type: "string", required: false}
   })
   if (valid) {
     db.getTrails(pool, req.query, {
       guid: "exact",
       name: "substr",
-      geohash: "prefix"
+      geohash: "prefix",
+      author: "substr"
     }, (rows) => {
       res.send(JSON.stringify(rows))
     })
