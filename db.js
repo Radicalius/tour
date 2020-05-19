@@ -2,7 +2,7 @@ const { Pool } = require('pg')
 const crypto = require('crypto');
 
 function guid(){
-  return Math.floor(Math.random() * (2**32 - 1))
+  return Math.floor(Math.random() * (2**31 - 1))
 }
 
 function secureHash(string){
@@ -120,4 +120,25 @@ function getTrails(pool, constr, rules, callback) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails}
+function createImage(pool, imgData) {
+  var g = guid()
+  pool.query('INSERT INTO images VALUES ($1,$2)', [
+    g,
+    imgData
+  ], (err, result) => { console.log(err) })
+  return g
+}
+
+function getImage(pool, id, res) {
+  pool.query('SELECT image FROM images WHERE guid=$1', [id], (err, result) => {
+    if (typeof(err) !== "undefined" || result.rows.length == 0) {
+      res.status(404)
+      res.send('Image not Found')
+    } else {
+      console.log(result.rows)
+      res.send(result.rows[0].image)
+    }
+  })
+}
+
+module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails, createImage: createImage, getImage: getImage}

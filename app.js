@@ -2,7 +2,7 @@ const express = require('express')
 const db = require('./db')
 
 app = express()
-app.use(express.json())
+app.use(express.json({limit: '10mb'}))
 const PORT = process.env.PORT
 
 var pool = db.initDb()
@@ -75,5 +75,15 @@ app.get('/trails', function (req, res) {
     })
   }
 });
+
+app.post('/images', function (req, res) {
+  var g = db.createImage(pool, req.body.data)
+  res.status(200)
+  res.send(Number(g).toString())
+})
+
+app.get('/images/:image', function(req, res) {
+  db.getImage(pool, req.params.image, res)
+})
 
 app.listen(PORT, () => 'Running Tour App on port ${ PORT }')
