@@ -120,11 +120,11 @@ function insertPoint(pool, point, res) {
   insert(pool, 'points', [point.guid, point.name, point.description, point.trail, point.geohash, point.image], res)
 }
 
-function getTrails(pool, constr, rules, callback) {
+function get(pool, table, constr, rules, callback) {
   ws = whereStr(constr, rules)
   where_str = ws[0]
   vals = ws[1]
-  pool.query(`SELECT * FROM trails ${ where_str }`, vals, (err, rows) => {
+  pool.query(`SELECT * FROM ${ table } ${ where_str }`, vals, (err, rows) => {
     console.log(err)
     rows = rows.rows
     for (row in rows) {
@@ -132,6 +132,14 @@ function getTrails(pool, constr, rules, callback) {
     }
     callback(rows)
   })
+}
+
+function getTrails(pool, constr, rules, callback) {
+  get(pool, 'trails', constr, rules, callback)
+}
+
+function getPoints(pool, constr, rules, callback) {
+  get(pool, 'points', constr, rules, callback)
 }
 
 function authTrail(pool, guid, auth, res, callback) {
@@ -201,4 +209,4 @@ function getImage(pool, id, res) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail}
+module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, getPoints: getPoints, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail}

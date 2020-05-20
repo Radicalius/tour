@@ -123,6 +123,25 @@ app.post('/points', function (req, res) {
   }
 })
 
+app.get('/points', function (req, res) {
+  var valid = assertForm(req.query, res, {
+    guid: {type: "number", required: false},
+    name: {type: "string", required: false},
+    geohash: {type: "string", required: false},
+    trail: {type: "number", required: false}
+  })
+  if (valid) {
+    db.getPoints(pool, req.query, {
+      guid: "exact",
+      name: "substr",
+      geohash: "prefix",
+      trail: "exact"
+    }, (rows) => {
+      res.send(JSON.stringify(rows))
+    })
+  }
+});
+
 app.post('/images', function (req, res) {
   var g = db.createImage(pool, req.body.data)
   res.status(200)
