@@ -92,10 +92,10 @@ function initDb() {
     return pool
 }
 
-function insertTrail(pool, trail) {
+function insertTrail(pool, trail, res) {
   trail.guid = guid()
   trail.pass = secureHash(trail.pass)
-  pool.query(`INSERT INTO trails VALUES ($1,$2,$3,$4,$5,$6)`, [
+  pool.query(`INSERT INTO trails VALUES ($1,$2,$3,$4,$5,$6,$7)`, [
     trail.guid,
     trail.name,
     trail.author,
@@ -103,7 +103,15 @@ function insertTrail(pool, trail) {
     trail.geohash,
     trail.image,
     trail.pass
-  ], (err, result) => { console.log(err) })
+  ], (err, result) => {
+    if (err) {
+      console.log(err)
+      res.status(500)
+      res.send('Database Error')
+    } else {
+      res.send('')
+    }
+  })
 }
 
 function getTrails(pool, constr, rules, callback) {
@@ -117,6 +125,46 @@ function getTrails(pool, constr, rules, callback) {
       delete rows[row].pass
     }
     callback(rows)
+  })
+}
+
+function authTrail(pool, guid, auth, res, callback) {
+  pool.query(`SELECT pass FROM trails WHERE guid=$1`, [guid], (err, rows) => {
+    if (rows.rows.length == 0) {
+      res.status(404)
+      res.send('Trail with specified GUID not found')
+      return
+    }
+    if (rows.rows[0].pass != secureHash(auth)) {
+      res.status(403)
+      res.send('Invalid Credentials')
+      return
+    }
+    callback()
+  })
+}
+
+function updateTrail(pool, body) {
+  var updates = []
+  var vals = []
+  var i = 1
+  for (elem in body) {
+    if (elem !== "guid" && elem !== "auth") {
+      updates.push(`${ elem } = $${ i }`)
+      if (elem === "pass") {
+        body[elem] = secureHash(body.elem)
+      }
+      vals.push(body[elem])
+      i ++
+    }
+  }
+  vals.push(body.guid)
+  updateStr = updates.join(', ')
+  console.log(`UPDATE trails SET ${ updates } WHERE guid = $${ i }`)
+  pool.query(`UPDATE trails SET ${ updates } WHERE guid = $${ i }`, vals, (err, rows) => {
+    if (err) {
+      console.log(err)
+    }
   })
 }
 
@@ -141,4 +189,4 @@ function getImage(pool, id, res) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails, createImage: createImage, getImage: getImage}
+module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage}

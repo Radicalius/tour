@@ -47,15 +47,33 @@ app.post('/trails', function (req, res) {
     name: {type: "string", required: true},
     author: {type: "string", required: true},
     geohash: {type: "string", required: true},
-    image: {type: "string", required: true},
+    image: {type: "number", required: true},
     description: {type: "string", required: true},
     pass: {type: "string", required: true}
   })
   if (valid) {
-    db.insertTrail(pool, req.body)
-    res.send('')
+    db.insertTrail(pool, req.body, res)
   }
 });
+
+app.put('/trails', function (req, res) {
+  var valid = assertForm(req.body, res, {
+    guid: {type: "number", required: true},
+    auth: {type: "string", required: true},
+    name: {type: "string", required: false},
+    author: {type: "string", required: false},
+    geohash: {type: "string", required: false},
+    image: {type: "number", required: false},
+    description: {type: "string", required: false},
+    pass: {type: "string", required: false}
+  })
+  if (valid) {
+    db.authTrail(pool, req.body.guid, req.body.auth, res, () => {
+      db.updateTrail(pool, req.body)
+      res.send('')
+    })
+  }
+})
 
 app.get('/trails', function (req, res) {
   var valid = assertForm(req.query, res, {
