@@ -92,17 +92,13 @@ function initDb() {
     return pool
 }
 
-function insertTrail(pool, trail, res) {
-  trail.guid = guid()
-  trail.pass = secureHash(trail.pass)
-  pool.query(`INSERT INTO trails VALUES ($1,$2,$3,$4,$5,$6,$7)`, [
-    trail.guid,
-    trail.name,
-    trail.author,
-    trail.description,
-    trail.geohash,
-    trail.image,
-    trail.pass
+function insert(pool, table, values, res) {
+  var nums = []
+  for (i = 0; i < values.length; i++) {
+    nums.push("$"+(i+1))
+  }
+  console.log(`INSERT INTO ${ table } VALUES (${ nums.join(",") })`)
+  pool.query(`INSERT INTO ${ table } VALUES (${ nums.join(",") })`, [
   ], (err, result) => {
     if (err) {
       console.log(err)
@@ -112,6 +108,17 @@ function insertTrail(pool, trail, res) {
       res.send('')
     }
   })
+}
+
+function insertTrail(pool, trail, res) {
+  trail.guid = guid()
+  trail.pass = secureHash(trail.pass)
+  insert(pool, 'trails', [trail.guid, trail.name, trail.author, trail.description, trail.geohash, trail.image, trail.pass], res)
+}
+
+function insertPoint(pool, point, res) {
+  point.guid = guid()
+  insert(pool, 'points', [point.guid, point.name, point.description, point.trail, point.geohash, point.image], res)
 }
 
 function getTrails(pool, constr, rules, callback) {
@@ -129,15 +136,15 @@ function getTrails(pool, constr, rules, callback) {
 }
 
 function authTrail(pool, guid, auth, res, callback) {
-  pool.query(`SELECT pass FROM trails WHERE guid=$1`, [guid], (err, rows) => {
+  pool.query(`SELECT pass FROM trails WHERE guid = $1`, [guid], (err, rows) => {
     if (rows.rows.length == 0) {
       res.status(404)
-      res.send('Trail with specified GUID not found')
+      res.send(JSON.stringify({error: 'Trail with specified GUID not found'}))
       return
     }
     if (rows.rows[0].pass != secureHash(auth)) {
       res.status(403)
-      res.send('Invalid Credentials')
+      res.send(JSON.stringify({error: 'Invalid Credentials'}))
       return
     }
     callback()
@@ -168,6 +175,12 @@ function updateTrail(pool, body) {
   })
 }
 
+function deleteTrail(pool, guid) {
+  pool.query(`DELETE FROM trails WHERE guid = $1`, [guid], (err, rows) => {
+    console.log(err)
+  })
+}
+
 function createImage(pool, imgData) {
   var g = guid()
   pool.query('INSERT INTO images VALUES ($1,$2)', [
@@ -189,4 +202,4 @@ function getImage(pool, id, res) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, getTrails: getTrails, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage}
+module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail}

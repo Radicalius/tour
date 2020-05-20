@@ -75,6 +75,19 @@ app.put('/trails', function (req, res) {
   }
 })
 
+app.delete('/trails', function (req, res) {
+  var valid = assertForm(req.body, res, {
+    guid: {type: "number", required: true},
+    auth: {type: "string", required: true},
+  })
+  if (valid) {
+    db.authTrail(pool, req.body.guid, req.body.auth, res, () => {
+      db.deleteTrail(pool, req.body.guid)
+      res.send('')
+    })
+  }
+})
+
 app.get('/trails', function (req, res) {
   var valid = assertForm(req.query, res, {
     guid: {type: "number", required: false},
@@ -93,6 +106,22 @@ app.get('/trails', function (req, res) {
     })
   }
 });
+
+app.post('/points', function (req, res) {
+  var valid = assertForm(req.body, res, {
+    name: {type: "string", required: true},
+    geohash: {type: "string", required: true},
+    image: {type: "number", required: true},
+    description: {type: "string", required: true},
+    trail: {type: "number",required: true},
+    auth: {type: "string", required: true}
+  })
+  if (valid) {
+    db.authTrail(pool, req.body.trail, req.body.auth, res, () => {
+      db.insertPoint(pool, req.body, res)
+    })
+  }
+})
 
 app.post('/images', function (req, res) {
   var g = db.createImage(pool, req.body.data)
