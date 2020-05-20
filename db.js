@@ -169,7 +169,7 @@ function authPoint(pool, guid, auth, res, callback) {
   })
 }
 
-function updateTrail(pool, body) {
+function update(pool, table, body) {
   var updates = []
   var vals = []
   var i = 1
@@ -185,12 +185,19 @@ function updateTrail(pool, body) {
   }
   vals.push(body.guid)
   updateStr = updates.join(', ')
-  console.log(`UPDATE trails SET ${ updates } WHERE guid = $${ i }`)
-  pool.query(`UPDATE trails SET ${ updates } WHERE guid = $${ i }`, vals, (err, rows) => {
+  pool.query(`UPDATE ${ table } SET ${ updates } WHERE guid = $${ i }`, vals, (err, rows) => {
     if (err) {
       console.log(err)
     }
   })
+}
+
+function updateTrail(pool, body) {
+  update(pool, 'trails', body)
+}
+
+function updatePoint(pool, body) {
+  update(pool, 'points', body)
 }
 
 function _delete(pool, table, guid) {
@@ -228,4 +235,4 @@ function getImage(pool, id, res) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, getPoints: getPoints, authTrail: authTrail, authPoint: authPoint, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail, deletePoint: deletePoint}
+module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, getPoints: getPoints, authTrail: authTrail, authPoint: authPoint, updateTrail: updateTrail, updatePoint: updatePoint, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail, deletePoint: deletePoint}

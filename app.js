@@ -142,6 +142,24 @@ app.get('/points', function (req, res) {
   }
 });
 
+app.put('/points', function (req, res) {
+  var valid = assertForm(req.body, res, {
+    guid: {type: "number", required: true},
+    auth: {type: "string", required: true},
+    name: {type: "string", required: false},
+    geohash: {type: "string", required: false},
+    image: {type: "number", required: false},
+    description: {type: "string", required: false},
+    pass: {type: "string", required: false}
+  })
+  if (valid) {
+    db.authPoint(pool, req.body.guid, req.body.auth, res, () => {
+      db.updatePoint(pool, req.body)
+      res.send('')
+    })
+  }
+})
+
 app.delete('/points', function (req, res) {
   var valid = assertForm(req.body, res, {
     guid: {type: "number", required: true},
