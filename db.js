@@ -98,8 +98,7 @@ function insert(pool, table, values, res) {
     nums.push("$"+(i+1))
   }
   console.log(`INSERT INTO ${ table } VALUES (${ nums.join(",") })`)
-  pool.query(`INSERT INTO ${ table } VALUES (${ nums.join(",") })`, [
-  ], (err, result) => {
+  pool.query(`INSERT INTO ${ table } VALUES (${ nums.join(",") })`, values, (err, result) => {
     if (err) {
       console.log(err)
       res.status(500)
