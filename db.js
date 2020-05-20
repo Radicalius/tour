@@ -158,6 +158,17 @@ function authTrail(pool, guid, auth, res, callback) {
   })
 }
 
+function authPoint(pool, guid, auth, res, callback) {
+  pool.query(`SELECT trail FROM points WHERE guid = $1`, [guid], (err, rows) => {
+    if (rows.rows.length == 0) {
+      res.status(404)
+      res.send(JSON.stringify({error: 'Point with specified GUID not found'}))
+      return
+    }
+    authTrail(pool, rows.rows[0].trail, auth, res, callback)
+  })
+}
+
 function updateTrail(pool, body) {
   var updates = []
   var vals = []
@@ -182,10 +193,18 @@ function updateTrail(pool, body) {
   })
 }
 
-function deleteTrail(pool, guid) {
-  pool.query(`DELETE FROM trails WHERE guid = $1`, [guid], (err, rows) => {
+function _delete(pool, table, guid) {
+  pool.query(`DELETE FROM ${ table } WHERE guid = $1`, [guid], (err, rows) => {
     console.log(err)
   })
+}
+
+function deleteTrail(pool, guid) {
+  _delete(pool, 'trails', guid)
+}
+
+function deletePoint(pool, guid) {
+  _delete(pool, 'points', guid)
 }
 
 function createImage(pool, imgData) {
@@ -209,4 +228,4 @@ function getImage(pool, id, res) {
   })
 }
 
-module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, getPoints: getPoints, authTrail: authTrail, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail}
+module.exports = {initDb: initDb, insertTrail: insertTrail, insertPoint: insertPoint, getTrails: getTrails, getPoints: getPoints, authTrail: authTrail, authPoint: authPoint, updateTrail: updateTrail, createImage: createImage, getImage: getImage, deleteTrail: deleteTrail, deletePoint: deletePoint}

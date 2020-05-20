@@ -142,6 +142,19 @@ app.get('/points', function (req, res) {
   }
 });
 
+app.delete('/points', function (req, res) {
+  var valid = assertForm(req.body, res, {
+    guid: {type: "number", required: true},
+    auth: {type: "string", required: true},
+  })
+  if (valid) {
+    db.authPoint(pool, req.body.guid, req.body.auth, res, () => {
+      db.deletePoint(pool, req.body.guid)
+      res.send('')
+    })
+  }
+})
+
 app.post('/images', function (req, res) {
   var g = db.createImage(pool, req.body.data)
   res.status(200)
